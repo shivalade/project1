@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoSort - AI Waste Segregation System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #10b981;
+            --secondary: #059669;
+            --accent: #34d399;
+            --plastic: #3b82f6;
+            --paper: #f59e0b;
+            --glass: #06b6d4;
+            --metal: #6b7280;
+            --organic: #84cc16;
+            --dark: #1a1a2e;
+            --light: #f8f9fa;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: var(--light);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.8rem;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(90deg, var(--accent), var(--primary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .feature-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 1.8rem;
+            background: rgba(16, 185, 129, 0.2);
+            border: 2px solid var(--primary);
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            border: none;
+            padding: 10px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        
+        .btn-primary:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+        }
+        
+        .section-title {
+            position: relative;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .section-title:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+        
+        .conveyor-belt {
+            background: #374151;
+            height: 120px;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+            margin: 30px 0;
+            border: 3px solid #4b5563;
+        }
+        
+        .belt-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #6b7280;
+            transform: translateY(-50%);
+        }
+        
+        .waste-item {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            transition: left 0.5s linear;
+        }
+        
+        .waste-plastic { background: var(--plastic); left: 10%; }
+        .waste-paper { background: var(--paper); left: 10%; }
+        .waste-glass { background: var(--glass); left: 10%; }
+        .waste-metal { background: var(--metal); left: 10%; }
+        .waste-organic { background: var(--organic); left: 10%; }
+        
+        .sorting-bin {
+            width: 100px;
+            height: 120px;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            position: relative;
+            margin: 0 auto;
+        }
+        
+        .bin-plastic { background: var(--plastic); }
+        .bin-paper { background: var(--paper); }
+        .bin-glass { background: var(--glass); }
+        .bin-metal { background: var(--metal); }
+        .bin-organic { background: var(--organic); }
+        
+        .bin-label {
+            position: absolute;
+            bottom: -25px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .camera-feed {
+            background: #000;
+            border-radius: 10px;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .detection-box {
+            position: absolute;
+            border: 2px solid;
+            border-radius: 5px;
+            padding: 5px;
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.5);
+        }
+        
+        .stats-card {
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .stats-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        
+        .tech-badge {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 5px 15px;
+            font-size: 0.8rem;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+        
+        .waste-preview {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            margin: 0 auto 10px;
+            cursor: pointer;
+        }
+        
+        .live-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background: #ef4444;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .processing-animation {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 5px solid var(--primary);
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .confidence-bar {
+            height: 8px;
+            border-radius: 4px;
+            background: #374151;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        
+        .confidence-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        
+        .log-entry {
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 4px solid;
+        }
+        
+        .log-plastic { border-left-color: var(--plastic); }
+        .log-paper { border-left-color: var(--paper); }
+        .log-glass { border-left-color: var(--glass); }
+        .log-metal { border-left-color: var(--metal); }
+        .log-organic { border-left-color: var(--organic); }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand gradient-text" href="#">
+                <i class="fas fa-recycle me-2"></i>EcoSort
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#"><i class="fas fa-home me-1"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-chart-bar me-1"></i> Analytics</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-cog me-1"></i> Settings</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <!-- Header Section -->
+        <div class="row mb-5">
+            <div class="col-md-8">
+                <h1 class="display-5 fw-bold">AI-Powered Waste Segregation</h1>
+                <p class="lead">Smart recycling system that uses computer vision to automatically sort waste with 95%+ accuracy.</p>
+                <div class="d-flex gap-3 mt-4 flex-wrap">
+                    <span class="tech-badge"><i class="fab fa-python me-1"></i> Python + OpenCV</span>
+                    <span class="tech-badge"><i class="fas fa-brain me-1"></i> TensorFlow/PyTorch</span>
+                    <span class="tech-badge"><i class="fas fa-eye me-1"></i> Real-time CV</span>
+                    <span class="tech-badge"><i class="fas fa-robot me-1"></i> ML Classification</span>
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="card p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0">System Status</h5>
+                            <small><span class="live-indicator"></span> Processing Live Feed</small>
+                        </div>
+                        <div class="avatar-circle">
+                            <i class="fas fa-robot fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="row">
+            <div class="col-lg-8 mb-4">
+                <!-- Conveyor Belt Simulation -->
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="section-title">Conveyor Belt Simulation</h4>
+                        
+                        <div class="conveyor-belt">
+                            <div class="belt-line"></div>
+                            <div class="waste-item waste-plastic" id="wasteItem">
+                                <i class="fas fa-wine-bottle"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="row text-center mt-4">
+                            <div class="col">
+                                <div class="sorting-bin bin-plastic">
+                                    <i class="fas fa-wine-bottle"></i>
+                                    <div class="bin-label">PLASTIC</div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="sorting-bin bin-paper">
+                                    <i class="fas fa-newspaper"></i>
+                                    <div class="bin-label">PAPER</div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="sorting-bin bin-glass">
+                                    <i class="fas fa-glass-whiskey"></i>
+                                    <div class="bin-label">GLASS</div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="sorting-bin bin-metal">
+                                    <i class="fas fa-cog"></i>
+                                    <div class="bin-label">METAL</div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="sorting-bin bin-organic">
+                                    <i class="fas fa-apple-alt"></i>
+                                    <div class="bin-label">ORGANIC</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="processing-animation" id="processingAnimation">
+                            <div class="spinner"></div>
+                            <p>AI is classifying waste material...</p>
+                        </div>
+                        
+                        <div class="d-flex justify-content-center gap-3 mt-4">
+                            <button class="btn btn-primary" id="startConveyor">
+                                <i class="fas fa-play me-2"></i>Start Conveyor
+                            </button>
+                            <button class="btn btn-outline-light" id="resetConveyor">
+                                <i class="fas fa-redo me-2"></i>Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Camera Feed & AI Detection -->
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <h4 class="section-title">Computer Vision Detection</h4>
+                        
+                        <div class="camera-feed">
+                            <div class="text-center text-muted">
+                                <i class="fas fa-camera fa-4x mb-3"></i>
+                                <p>Live camera feed will appear here</p>
+                            </div>
+                            <div class="detection-box" style="display: none; top: 50px; left: 100px; border-color: var(--plastic); color: var(--plastic);">
+                                Plastic Bottle - 96%
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <h6>Detection Confidence</h6>
+                                <div class="mb-2">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Plastic</span>
+                                        <span id="plasticConfidence">0%</span>
+                                    </div>
+                                    <div class="confidence-bar">
+                                        <div class="confidence-fill" id="plasticBar" style="width: 0%; background: var(--plastic);"></div>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Paper</span>
+                                        <span id="paperConfidence">0%</span>
+                                    </div>
+                                    <div class="confidence-bar">
+                                        <div class="confidence-fill" id="paperBar" style="width: 0%; background: var(--paper);"></div>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Glass</span>
+                                        <span id="glassConfidence">0%</span>
+                                    </div>
+                                    <div class="confidence-bar">
+                                        <div class="confidence-fill" id="glassBar" style="width: 0%; background: var(--glass);"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>&nbsp;</h6>
+                                <div class="mb-2">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Metal</span>
+                                        <span id="metalConfidence">0%</span>
+                                    </div>
+                                    <div class="confidence-bar">
+                                        <div class="confidence-fill" id="metalBar" style="width: 0%; background: var(--metal);"></div>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Organic</span>
+                                        <span id="organicConfidence">0%</span>
+                                    </div>
+                                    <div class="confidence-bar">
+                                        <div class="confidence-fill" id="organicBar" style="width: 0%; background: var(--organic);"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <!-- System Stats -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h4 class="section-title">System Statistics</h4>
+                        
+                        <div class="row text-center">
+                            <div class="col-6 mb-3">
+                                <div class="stats-card" style="background: rgba(59, 130, 246, 0.1);">
+                                    <div class="stats-value" id="plasticCount">142</div>
+                                    <div>Plastic Items</div>
+                                </div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <div class="stats-card" style="background: rgba(245, 158, 11, 0.1);">
+                                    <div class="stats-value" id="paperCount">87</div>
+                                    <div>Paper Items</div>
+                                </div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <div class="stats-card" style="background: rgba(6, 182, 212, 0.1);">
+                                    <div class="stats-value" id="glassCount">64</div>
+                                    <div>Glass Items</div>
+                                </div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <div class="stats-card" style="background: rgba(107, 114, 128, 0.1);">
+                                    <div class="stats-value" id="metalCount">53</div>
+                                    <div>Metal Items</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stats-card" style="background: rgba(132, 204, 22, 0.1);">
+                                    <div class="stats-value" id="organicCount">121</div>
+                                    <div>Organic Items</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stats-card" style="background: rgba(239, 68, 68, 0.1);">
+                                    <div class="stats-value" id="accuracy">96%</div>
+                                    <div>Accuracy</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Waste Selection -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h4 class="section-title">Test Waste Items</h4>
+                        <p class="text-muted">Select a waste item to simulate on the conveyor belt</p>
+                        
+                        <div class="row text-center">
+                            <div class="col-4 mb-3">
+                                <div class="waste-preview waste-plastic" data-type="plastic">
+                                    <i class="fas fa-wine-bottle"></i>
+                                </div>
+                                <small>Plastic</small>
+                            </div>
+                            <div class="col-4 mb-3">
+                                <div class="waste-preview waste-paper" data-type="paper">
+                                    <i class="fas fa-newspaper"></i>
+                                </div>
+                                <small>Paper</small>
+                            </div>
+                            <div class="col-4 mb-3">
+                                <div class="waste-preview waste-glass" data-type="glass">
+                                    <i class="fas fa-glass-whiskey"></i>
+                                </div>
+                                <small>Glass</small>
+                            </div>
+                            <div class="col-4 mb-3">
+                                <div class="waste-preview waste-metal" data-type="metal">
+                                    <i class="fas fa-cog"></i>
+                                </div>
+                                <small>Metal</small>
+                            </div>
+                            <div class="col-4 mb-3">
+                                <div class="waste-preview waste-organic" data-type="organic">
+                                    <i class="fas fa-apple-alt"></i>
+                                </div>
+                                <small>Organic</small>
+                            </div>
+                            <div class="col-4 mb-3">
+                                <div class="waste-preview" style="background: #6d28d9;" data-type="random">
+                                    <i class="fas fa-random"></i>
+                                </div>
+                                <small>Random</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Activity Log -->
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="section-title">Sorting Log</h4>
+                        <div style="max-height: 300px; overflow-y: auto;">
+                            <div class="log-entry log-plastic">
+                                <div class="d-flex justify-content-between">
+                                    <strong>Plastic Bottle</strong>
+                                    <small>14:32:05</small>
+                                </div>
+                                <small>96% confidence - Sent to Plastic bin</small>
+                            </div>
+                            <div class="log-entry log-organic">
+                                <div class="d-flex justify-content-between">
+                                    <strong>Banana Peel</strong>
+                                    <small>14:31:48</small>
+                                </div>
+                                <small>92% confidence - Sent to Organic bin</small>
+                            </div>
+                            <div class="log-entry log-paper">
+                                <div class="d-flex justify-content-between">
+                                    <strong>Cardboard</strong>
+                                    <small>14:31:22</small>
+                                </div>
+                                <small>89% confidence - Sent to Paper bin</small>
+                            </div>
+                            <div class="log-entry log-metal">
+                                <div class="d-flex justify-content-between">
+                                    <strong>Soda Can</strong>
+                                    <small>14:30:56</small>
+                                </div>
+                                <small>94% confidence - Sent to Metal bin</small>
+                            </div>
+                            <div class="log-entry log-glass">
+                                <div class="d-flex justify-content-between">
+                                    <strong>Glass Jar</strong>
+                                    <small>14:30:31</small>
+                                </div>
+                                <small>91% confidence - Sent to Glass bin</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tech Stack Section -->
+        <div class="row my-5">
+            <div class="col-12 text-center mb-5">
+                <h2 class="section-title d-inline-block">Technology Implementation</h2>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 text-center p-4">
+                    <div class="feature-icon">
+                        <i class="fab fa-python"></i>
+                    </div>
+                    <h4>Python Backend</h4>
+                    <p>Flask/Django server with OpenCV for real-time image processing and TensorFlow/PyTorch for waste classification.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 text-center p-4">
+                    <div class="feature-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h4>Machine Learning</h4>
+                    <p>CNN model trained on thousands of waste images with transfer learning for high-accuracy classification.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 text-center p-4">
+                    <div class="feature-icon">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <h4>Computer Vision</h4>
+                    <p>Real-time object detection and classification with confidence scoring for reliable waste segregation.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="gradient-text"><i class="fas fa-recycle me-2"></i>EcoSort</h5>
+                    <p class="text-muted">AI-powered waste segregation for a cleaner planet.</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <p class="text-muted">&copy; 2023 EcoSort. All rights reserved.</p>
+                    <div class="d-flex justify-content-end gap-3">
+                        <a href="#" class="text-muted"><i class="fas fa-envelope"></i></a>
+                        <a href="#" class="text-muted"><i class="fab fa-github"></i></a>
+                        <a href="#" class="text-muted"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Conveyor belt simulation
+        let currentWasteType = 'plastic';
+        let isConveyorRunning = false;
+        
+        document.getElementById('startConveyor').addEventListener('click', function() {
+            if (isConveyorRunning) return;
+            
+            isConveyorRunning = true;
+            this.disabled = true;
+            
+            // Show processing animation
+            document.getElementById('processingAnimation').style.display = 'block';
+            
+            // Move waste item along conveyor
+            const wasteItem = document.getElementById('wasteItem');
+            wasteItem.style.left = '10%';
+            
+            // Simulate AI processing
+            setTimeout(() => {
+                // Update confidence bars with random values (simulated AI output)
+                updateConfidenceBars(currentWasteType);
+                
+                // Move item to the correct bin
+                let targetPosition = 0;
+                switch(currentWasteType) {
+                    case 'plastic': targetPosition = 10; break;
+                    case 'paper': targetPosition = 30; break;
+                    case 'glass': targetPosition = 50; break;
+                    case 'metal': targetPosition = 70; break;
+                    case 'organic': targetPosition = 90; break;
+                }
+                
+                wasteItem.style.left = targetPosition + '%';
+                
+                // Hide processing animation
+                document.getElementById('processingAnimation').style.display = 'none';
+                
+                // Update statistics
+                updateStatistics(currentWasteType);
+                
+                // Add to log
+                addToLog(currentWasteType);
+                
+                // Reset after a delay
+                setTimeout(() => {
+                    resetConveyor();
+                    document.getElementById('startConveyor').disabled = false;
+                    isConveyorRunning = false;
+                }, 2000);
+                
+            }, 2000);
+        });
+        
+        document.getElementById('resetConveyor').addEventListener('click', resetConveyor);
+        
+        function resetConveyor() {
+            const wasteItem = document.getElementById('wasteItem');
+            wasteItem.style.left = '10%';
+            document.getElementById('processingAnimation').style.display = 'none';
+            document.getElementById('startConveyor').disabled = false;
+            isConveyorRunning = false;
+            
+            // Reset confidence bars
+            resetConfidenceBars();
+        }
+        
+        // Waste type selection
+        document.querySelectorAll('.waste-preview').forEach(preview => {
+            preview.addEventListener('click', function() {
+                const type = this.getAttribute('data-type');
+                
+                if (type === 'random') {
+                    // Select random waste type
+                    const types = ['plastic', 'paper', 'glass', 'metal', 'organic'];
+                    currentWasteType = types[Math.floor(Math.random() * types.length)];
+                } else {
+                    currentWasteType = type;
+                }
+                
+                // Update waste item on conveyor
+                const wasteItem = document.getElementById('wasteItem');
+                wasteItem.className = 'waste-item waste-' + currentWasteType;
+                
+                // Set appropriate icon
+                const icons = {
+                    'plastic': 'fa-wine-bottle',
+                    'paper': 'fa-newspaper',
+                    'glass': 'fa-glass-whiskey',
+                    'metal': 'fa-cog',
+                    'organic': 'fa-apple-alt'
+                };
+                wasteItem.innerHTML = `<i class="fas ${icons[currentWasteType]}"></i>`;
+                
+                // Reset conveyor
+                resetConveyor();
+            });
+        });
+        
+        // Update confidence bars (simulated AI output)
+        function updateConfidenceBars(correctType) {
+            const types = ['plastic', 'paper', 'glass', 'metal', 'organic'];
+            const confidenceValues = {};
+            
+            // Generate random confidence values that favor the correct type
+            types.forEach(type => {
+                if (type === correctType) {
+                    confidenceValues[type] = 85 + Math.floor(Math.random() * 15); // 85-99%
+                } else {
+                    confidenceValues[type] = Math.floor(Math.random() * 30); // 0-29%
+                }
+            });
+            
+            // Normalize to sum to 100%
+            let sum = Object.values(confidenceValues).reduce((a, b) => a + b, 0);
+            types.forEach(type => {
+                confidenceValues[type] = Math.round((confidenceValues[type] / sum) * 100);
+            });
+            
+            // Apply to UI
+            types.forEach(type => {
+                document.getElementById(`${type}Confidence`).textContent = confidenceValues[type] + '%';
+                document.getElementById(`${type}Bar`).style.width = confidenceValues[type] + '%';
+            });
+        }
+        
+        function resetConfidenceBars() {
+            const types = ['plastic', 'paper', 'glass', 'metal', 'organic'];
+            types.forEach(type => {
+                document.getElementById(`${type}Confidence`).textContent = '0%';
+                document.getElementById(`${type}Bar`).style.width = '0%';
+            });
+        }
+        
+        // Update statistics
+        function updateStatistics(type) {
+            const countElement = document.getElementById(`${type}Count`);
+            let currentCount = parseInt(countElement.textContent);
+            countElement.textContent = currentCount + 1;
+            
+            // Update accuracy (simulated)
+            document.getElementById('accuracy').textContent = (95 + Math.floor(Math.random() * 4)) + '%';
+        }
+        
+        // Add entry to activity log
+        function addToLog(type) {
+            const logContainer = document.querySelector('.card .row .col-lg-4 .card .card-body div');
+            const typeNames = {
+                'plastic': 'Plastic Bottle',
+                'paper': 'Cardboard',
+                'glass': 'Glass Jar',
+                'metal': 'Soda Can',
+                'organic': 'Banana Peel'
+            };
+            
+            const confidenceValues = {
+                'plastic': 96,
+                'paper': 89,
+                'glass': 91,
+                'metal': 94,
+                'organic': 92
+            };
+            
+            const now = new Date();
+            const timeString = now.getHours().toString().padStart(2, '0') + ':' + 
+                              now.getMinutes().toString().padStart(2, '0') + ':' + 
+                              now.getSeconds().toString().padStart(2, '0');
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.innerHTML = `
+                <div class="d-flex justify-content-between">
+                    <strong>${typeNames[type]}</strong>
+                    <small>${timeString}</small>
+                </div>
+                <small>${confidenceValues[type]}% confidence - Sent to ${type.charAt(0).toUpperCase() + type.slice(1)} bin</small>
+            `;
+            
+            logContainer.insertBefore(logEntry, logContainer.firstChild);
+            
+            // Keep only last 5 entries
+            if (logContainer.children.length > 5) {
+                logContainer.removeChild(logContainer.lastChild);
+            }
+        }
+        
+        // Initialize with a random waste type
+        const types = ['plastic', 'paper', 'glass', 'metal', 'organic'];
+        currentWasteType = types[Math.floor(Math.random() * types.length)];
+        const wasteItem = document.getElementById('wasteItem');
+        wasteItem.className = 'waste-item waste-' + currentWasteType;
+        
+        const icons = {
+            'plastic': 'fa-wine-bottle',
+            'paper': 'fa-newspaper',
+            'glass': 'fa-glass-whiskey',
+            'metal': 'fa-cog',
+            'organic': 'fa-apple-alt'
+        };
+        wasteItem.innerHTML = `<i class="fas ${icons[currentWasteType]}"></i>`;
+    </script>
+</body>
+</html>

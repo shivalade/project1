@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduVerse - 3D Interactive Learning Platform</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --accent: #7209b7;
+            --success: #4cc9f0;
+            --warning: #f72585;
+            --dark: #1a1a2e;
+            --light: #f8f9fa;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: var(--light);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.8rem;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(90deg, var(--success), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .feature-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 1.8rem;
+            background: rgba(67, 97, 238, 0.2);
+            border: 2px solid var(--primary);
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            border: none;
+            padding: 10px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        
+        .btn-primary:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+        }
+        
+        .section-title {
+            position: relative;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .section-title:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+        
+        #canvas-container {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            border-radius: 15px;
+            overflow: hidden;
+            background: #000;
+        }
+        
+        .scene-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 100;
+        }
+        
+        .topic-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            height: 100%;
+        }
+        
+        .topic-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .voice-controls {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50px;
+            padding: 10px 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .explanation-panel {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            padding: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .ai-generator {
+            background: rgba(76, 201, 240, 0.1);
+            border-left: 4px solid var(--success);
+            padding: 20px;
+            border-radius: 0 10px 10px 0;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+        
+        .spinner {
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 5px solid var(--success);
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .tech-badge {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 5px 15px;
+            font-size: 0.8rem;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand gradient-text" href="#">
+                <i class="fas fa-cube me-2"></i>EduVerse
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#"><i class="fas fa-home me-1"></i> Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-book me-1"></i> Library</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-chalkboard-teacher me-1"></i> For Teachers</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-cog me-1"></i> Settings</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <!-- Header Section -->
+        <div class="row mb-5">
+            <div class="col-md-8">
+                <h1 class="display-5 fw-bold">3D Interactive Learning Platform</h1>
+                <p class="lead">Transform complex topics into immersive 3D visual experiences with AI-powered explanations.</p>
+                <div class="d-flex gap-3 mt-4 flex-wrap">
+                    <span class="tech-badge"><i class="fab fa-python me-1"></i> Python AI Backend</span>
+                    <span class="tech-badge"><i class="fas fa-cube me-1"></i> Three.js 3D Graphics</span>
+                    <span class="tech-badge"><i class="fas fa-robot me-1"></i> AI-Powered Generation</span>
+                    <span class="tech-badge"><i class="fas fa-microphone me-1"></i> Voice Explanations</span>
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="card p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0">Dr. Sarah Johnson</h5>
+                            <small>Physics Professor</small>
+                        </div>
+                        <div class="avatar-circle">
+                            <i class="fas fa-user-tie fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="row">
+            <div class="col-lg-8 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="section-title">3D Learning Environment</h4>
+                        <div id="canvas-container">
+                            <div class="scene-controls">
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-sm btn-primary" id="resetView"><i class="fas fa-sync-alt"></i></button>
+                                    <button class="btn btn-sm btn-outline-light" id="zoomIn"><i class="fas fa-search-plus"></i></button>
+                                    <button class="btn btn-sm btn-outline-light" id="zoomOut"><i class="fas fa-search-minus"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <h5 id="scene-title">Solar System</h5>
+                            <div class="voice-controls">
+                                <button class="btn btn-sm btn-outline-light" id="playAudio">
+                                    <i class="fas fa-play"></i> Play Explanation
+                                </button>
+                                <button class="btn btn-sm btn-outline-light" id="pauseAudio">
+                                    <i class="fas fa-pause"></i> Pause
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="explanation-panel mt-3">
+                            <p id="scene-explanation">The Solar System consists of the Sun and the objects that orbit it, either directly or indirectly. Of the objects that orbit the Sun directly, the largest eight are the planets, with the remainder being smaller objects, such as dwarf planets and small Solar System bodies.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- AI Topic Generator -->
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <h4 class="section-title">AI Topic Generator</h4>
+                        <div class="ai-generator">
+                            <p><strong>For Teachers:</strong> Upload a topic and let AI generate a complete 3D learning experience.</p>
+                            <div class="mb-3">
+                                <label for="topicInput" class="form-label">Enter a topic:</label>
+                                <input type="text" class="form-control bg-dark text-light" id="topicInput" placeholder="E.g., Photosynthesis, Pythagorean Theorem, Water Cycle">
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary" id="generateScene">
+                                    <i class="fas fa-magic me-2"></i> Generate 3D Scene
+                                </button>
+                                <button class="btn btn-outline-light">
+                                    <i class="fas fa-upload me-2"></i> Upload Lesson Plan
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="loading" id="generatorLoading">
+                            <div class="spinner"></div>
+                            <p>AI is generating your 3D learning experience...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <!-- Topic Library -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h4 class="section-title">Topic Library</h4>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="card topic-card" data-scene="solar-system">
+                                    <div class="card-body text-center">
+                                        <div class="feature-icon">
+                                            <i class="fas fa-globe-americas"></i>
+                                        </div>
+                                        <h6>Solar System</h6>
+                                        <small class="text-muted">Astronomy</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card topic-card" data-scene="molecular-structure">
+                                    <div class="card-body text-center">
+                                        <div class="feature-icon">
+                                            <i class="fas fa-atom"></i>
+                                        </div>
+                                        <h6>Molecular Structure</h6>
+                                        <small class="text-muted">Chemistry</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card topic-card" data-scene="algorithm-visualization">
+                                    <div class="card-body text-center">
+                                        <div class="feature-icon">
+                                            <i class="fas fa-sitemap"></i>
+                                        </div>
+                                        <h6>Algorithm Visualization</h6>
+                                        <small class="text-muted">Computer Science</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card topic-card" data-scene="human-anatomy">
+                                    <div class="card-body text-center">
+                                        <div class="feature-icon">
+                                            <i class="fas fa-heartbeat"></i>
+                                        </div>
+                                        <h6>Human Anatomy</h6>
+                                        <small class="text-muted">Biology</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card topic-card" data-scene="geometry">
+                                    <div class="card-body text-center">
+                                        <div class="feature-icon">
+                                            <i class="fas fa-shapes"></i>
+                                        </div>
+                                        <h6>Geometric Shapes</h6>
+                                        <small class="text-muted">Mathematics</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card topic-card" data-scene="physics">
+                                    <div class="card-body text-center">
+                                        <div class="feature-icon">
+                                            <i class="fas fa-rocket"></i>
+                                        </div>
+                                        <h6>Physics Principles</h6>
+                                        <small class="text-muted">Physics</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tech Stack -->
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="section-title">Technology Stack</h4>
+                        <div class="mb-3">
+                            <h6><i class="fab fa-python text-warning me-2"></i>Backend - Python</h6>
+                            <ul class="small">
+                                <li>AI models for content generation</li>
+                                <li>Natural language processing</li>
+                                <li>3D scene generation algorithms</li>
+                                <li>RESTful API with Django/Flask</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6><i class="fas fa-cube text-info me-2"></i>Frontend - Three.js</h6>
+                            <ul class="small">
+                                <li>Real-time 3D rendering</li>
+                                <li>Interactive scene controls</li>
+                                <li>WebGL-based graphics</li>
+                                <li>Responsive design</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6><i class="fas fa-robot text-success me-2"></i>AI Integration</h6>
+                            <ul class="small">
+                                <li>Automated 3D scene creation</li>
+                                <li>Voice synthesis for explanations</li>
+                                <li>Content personalization</li>
+                                <li>Adaptive learning paths</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Features Section -->
+        <div class="row my-5">
+            <div class="col-12 text-center mb-5">
+                <h2 class="section-title d-inline-block">Why EduVerse is Unique</h2>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 text-center p-4">
+                    <div class="feature-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h4>AI-Powered Generation</h4>
+                    <p>Teachers can upload any topic and our AI automatically generates interactive 3D learning experiences with explanations.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 text-center p-4">
+                    <div class="feature-icon">
+                        <i class="fas fa-vr-cardboard"></i>
+                    </div>
+                    <h4>Immersive 3D Visuals</h4>
+                    <p>Complex concepts become tangible through interactive Three.js visualizations that students can explore from any angle.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 text-center p-4">
+                    <div class="feature-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <h4>Multi-Modal Learning</h4>
+                    <p>Combine 3D visuals, text explanations, and voice narration to accommodate different learning styles effectively.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="gradient-text"><i class="fas fa-cube me-2"></i>EduVerse</h5>
+                    <p class="text-muted">Transforming education through immersive 3D experiences.</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <p class="text-muted">&copy; 2023 EduVerse. All rights reserved.</p>
+                    <div class="d-flex justify-content-end gap-3">
+                        <a href="#" class="text-muted"><i class="fas fa-envelope"></i></a>
+                        <a href="#" class="text-muted"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-muted"><i class="fab fa-linkedin"></i></a>
+                        <a href="#" class="text-muted"><i class="fab fa-github"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Three.js Scene Setup
+        let scene, camera, renderer, controls;
+        
+        function initThreeJS() {
+            // Create scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a1a);
+            
+            // Create camera
+            camera = new THREE.PerspectiveCamera(75, document.getElementById('canvas-container').offsetWidth / document.getElementById('canvas-container').offsetHeight, 0.1, 1000);
+            camera.position.z = 15;
+            
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(document.getElementById('canvas-container').offsetWidth, document.getElementById('canvas-container').offsetHeight);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+            
+            // Add orbit controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.25;
+            
+            // Add lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 7);
+            scene.add(directionalLight);
+            
+            // Create solar system (initial scene)
+            createSolarSystem();
+            
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize, false);
+            
+            // Start animation loop
+            animate();
+        }
+        
+        function onWindowResize() {
+            camera.aspect = document.getElementById('canvas-container').offsetWidth / document.getElementById('canvas-container').offsetHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(document.getElementById('canvas-container').offsetWidth, document.getElementById('canvas-container').offsetHeight);
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        // Create solar system scene
+        function createSolarSystem() {
+            // Clear existing objects
+            while(scene.children.length > 2) { 
+                scene.remove(scene.children[2]); 
+            }
+            
+            // Create sun
+            const sunGeometry = new THREE.SphereGeometry(2, 32, 32);
+            const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
+            const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+            scene.add(sun);
+            
+            // Create planets
+            const planets = [
+                { name: "Mercury", size: 0.4, color: 0x8c8c8c, distance: 4 },
+                { name: "Venus", size: 0.6, color: 0xe6b87e, distance: 6 },
+                { name: "Earth", size: 0.7, color: 0x6b93d6, distance: 8 },
+                { name: "Mars", size: 0.5, color: 0xc1440e, distance: 10 },
+                { name: "Jupiter", size: 1.4, color: 0xc19e6d, distance: 13 },
+                { name: "Saturn", size: 1.2, color: 0xe3d4ad, distance: 16 },
+                { name: "Uranus", size: 0.9, color: 0x4fd0e7, distance: 19 },
+                { name: "Neptune", size: 0.9, color: 0x4b70dd, distance: 22 }
+            ];
+            
+            planets.forEach(planet => {
+                const geometry = new THREE.SphereGeometry(planet.size, 32, 32);
+                const material = new THREE.MeshStandardMaterial({ color: planet.color });
+                const mesh = new THREE.Mesh(geometry, material);
+                
+                // Position planet
+                mesh.position.x = planet.distance;
+                
+                // Add to scene
+                scene.add(mesh);
+                
+                // Add orbit ring
+                const orbitGeometry = new THREE.RingGeometry(planet.distance - 0.1, planet.distance + 0.1, 64);
+                const orbitMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xffffff, 
+                    side: THREE.DoubleSide,
+                    transparent: true,
+                    opacity: 0.1
+                });
+                const orbit = new THREE.Mesh(orbitGeometry, orbitMaterial);
+                orbit.rotation.x = Math.PI / 2;
+                scene.add(orbit);
+            });
+        }
+        
+        // Create molecular structure scene
+        function createMolecularStructure() {
+            // Clear existing objects
+            while(scene.children.length > 2) { 
+                scene.remove(scene.children[2]); 
+            }
+            
+            // Create atoms
+            const atoms = [
+                { element: "O", color: 0xff0000, position: [0, 0, 0], size: 1.0 },
+                { element: "H", color: 0xcccccc, position: [1.5, 0, 0], size: 0.5 },
+                { element: "H", color: 0xcccccc, position: [-0.5, 1.2, 0], size: 0.5 }
+            ];
+            
+            atoms.forEach(atom => {
+                const geometry = new THREE.SphereGeometry(atom.size, 32, 32);
+                const material = new THREE.MeshStandardMaterial({ color: atom.color });
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.position.set(...atom.position);
+                scene.add(mesh);
+                
+                // Add element label (simulated)
+                const labelGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+                const labelMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+                const label = new THREE.Mesh(labelGeometry, labelMaterial);
+                label.position.set(atom.position[0], atom.position[1] + atom.size + 0.2, atom.position[2]);
+                scene.add(label);
+            });
+            
+            // Add bonds
+            const bond1Geometry = new THREE.CylinderGeometry(0.1, 0.1, 1.5, 8);
+            const bond1Material = new THREE.MeshStandardMaterial({ color: 0x888888 });
+            const bond1 = new THREE.Mesh(bond1Geometry, bond1Material);
+            bond1.position.set(0.75, 0, 0);
+            bond1.rotation.z = Math.PI / 2;
+            scene.add(bond1);
+            
+            const bond2Geometry = new THREE.CylinderGeometry(0.1, 0.1, 1.3, 8);
+            const bond2Material = new THREE.MeshStandardMaterial({ color: 0x888888 });
+            const bond2 = new THREE.Mesh(bond2Geometry, bond2Material);
+            bond2.position.set(-0.25, 0.6, 0);
+            bond2.rotation.z = -Math.PI / 4;
+            scene.add(bond2);
+        }
+        
+        // Scene controls
+        document.getElementById('resetView').addEventListener('click', () => {
+            controls.reset();
+        });
+        
+        document.getElementById('zoomIn').addEventListener('click', () => {
+            camera.position.z -= 1;
+        });
+        
+        document.getElementById('zoomOut').addEventListener('click', () => {
+            camera.position.z += 1;
+        });
+        
+        // Topic selection
+        document.querySelectorAll('.topic-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const sceneType = this.getAttribute('data-scene');
+                loadScene(sceneType);
+                
+                // Update active state
+                document.querySelectorAll('.topic-card').forEach(c => {
+                    c.classList.remove('border-primary');
+                });
+                this.classList.add('border-primary');
+            });
+        });
+        
+        function loadScene(sceneType) {
+            switch(sceneType) {
+                case 'solar-system':
+                    createSolarSystem();
+                    document.getElementById('scene-title').textContent = 'Solar System';
+                    document.getElementById('scene-explanation').textContent = 'The Solar System consists of the Sun and the objects that orbit it, either directly or indirectly. Of the objects that orbit the Sun directly, the largest eight are the planets, with the remainder being smaller objects, such as dwarf planets and small Solar System bodies.';
+                    break;
+                case 'molecular-structure':
+                    createMolecularStructure();
+                    document.getElementById('scene-title').textContent = 'Water Molecule (H₂O)';
+                    document.getElementById('scene-explanation').textContent = 'A water molecule consists of two hydrogen atoms bonded to one oxygen atom. The bond angle between the hydrogen atoms is approximately 104.5 degrees, giving the molecule a bent shape. This molecular structure is responsible for many of water\'s unique properties, including its polarity and ability to form hydrogen bonds.';
+                    break;
+                case 'algorithm-visualization':
+                    // Placeholder for algorithm visualization
+                    document.getElementById('scene-title').textContent = 'Sorting Algorithm Visualization';
+                    document.getElementById('scene-explanation').textContent = 'This visualization demonstrates how different sorting algorithms organize data. Each bar represents a value, and the animation shows how algorithms like Bubble Sort, Quick Sort, and Merge Sort rearrange the values into ascending order through comparison and swapping operations.';
+                    break;
+                default:
+                    createSolarSystem();
+            }
+        }
+        
+        // AI Generator
+        document.getElementById('generateScene').addEventListener('click', function() {
+            const topic = document.getElementById('topicInput').value;
+            if (!topic) {
+                alert('Please enter a topic first!');
+                return;
+            }
+            
+            // Show loading
+            document.getElementById('generatorLoading').style.display = 'block';
+            
+            // Simulate AI processing
+            setTimeout(() => {
+                document.getElementById('generatorLoading').style.display = 'none';
+                
+                // Update scene based on topic (in a real app, this would call an API)
+                document.getElementById('scene-title').textContent = topic;
+                document.getElementById('scene-explanation').textContent = `This is an AI-generated 3D visualization of ${topic}. The scene includes interactive elements that help explain the key concepts and relationships. You can rotate, zoom, and explore the model to better understand how ${topic} works.`;
+                
+                // Show success message
+                alert(`AI has successfully generated a 3D learning experience for "${topic}"!`);
+            }, 3000);
+        });
+        
+        // Voice controls (simulated)
+        document.getElementById('playAudio').addEventListener('click', function() {
+            alert('Voice explanation would play here. In a real implementation, this would use Web Speech API or pre-recorded audio.');
+        });
+        
+        document.getElementById('pauseAudio').addEventListener('click', function() {
+            alert('Voice explanation paused.');
+        });
+        
+        // Initialize Three.js when page loads
+        window.onload = initThreeJS;
+    </script>
+</body>
+</html>

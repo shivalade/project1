@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FaceAttend - AI Attendance System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --accent: #7209b7;
+            --success: #4cc9f0;
+            --warning: #f72585;
+            --danger: #e63946;
+            --dark: #1a1a2e;
+            --light: #f8f9fa;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: var(--light);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.8rem;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(90deg, var(--success), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .feature-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 1.8rem;
+            background: rgba(67, 97, 238, 0.2);
+            border: 2px solid var(--primary);
+        }
+        
+        .camera-container {
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            background: #000;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .status-indicator {
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .attendance-table {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .attendance-table th {
+            background: rgba(67, 97, 238, 0.2);
+            border: none;
+            padding: 15px;
+        }
+        
+        .attendance-table td {
+            border: none;
+            padding: 12px 15px;
+            vertical-align: middle;
+        }
+        
+        .attendance-table tbody tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .attendance-table tbody tr:last-child {
+            border-bottom: none;
+        }
+        
+        .analytics-card {
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            transition: transform 0.3s ease;
+        }
+        
+        .analytics-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .analytics-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        
+        .face-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 3px solid var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            border: none;
+            padding: 10px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        
+        .btn-primary:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+        }
+        
+        .section-title {
+            position: relative;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .section-title:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+        
+        .live-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background: var(--success);
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .tab-content {
+            padding: 20px 0;
+        }
+        
+        .nav-tabs .nav-link {
+            color: var(--light);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            margin-right: 5px;
+        }
+        
+        .nav-tabs .nav-link.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .fake-face-alert {
+            border-left: 4px solid var(--warning);
+            background: rgba(247, 37, 133, 0.1);
+        }
+        
+        .report-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .report-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .tech-stack {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .backend-api {
+            background: rgba(76, 201, 240, 0.1);
+            border-left: 4px solid var(--success);
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand gradient-text" href="#">
+                <i class="fas fa-camera-retro me-2"></i>FaceAttend
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#"><i class="fas fa-home me-1"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-users me-1"></i> Students</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-chart-bar me-1"></i> Analytics</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-cog me-1"></i> Settings</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <!-- Header Section -->
+        <div class="row mb-5">
+            <div class="col-md-8">
+                <h1 class="display-5 fw-bold">AI-Powered Attendance System</h1>
+                <p class="lead">Automated facial recognition for accurate, secure, and efficient attendance tracking in educational institutions.</p>
+                <div class="d-flex gap-3 mt-4">
+                    <span class="status-indicator bg-success"><span class="live-indicator"></span> System Active</span>
+                    <span class="status-indicator bg-primary">Today: 84% Attendance</span>
+                    <span class="status-indicator bg-warning">2 Fake Attempts Blocked</span>
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="card p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0">Dr. Sarah Johnson</h5>
+                            <small>Computer Science Department</small>
+                        </div>
+                        <div class="face-circle">
+                            <i class="fas fa-user-tie fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tech Stack Info -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="section-title">Full Stack Implementation</h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="tech-stack">
+                                    <h5><i class="fab fa-python text-warning me-2"></i>Backend - Django + OpenCV</h5>
+                                    <ul class="mt-3">
+                                        <li>Django REST Framework for API endpoints</li>
+                                        <li>OpenCV for face detection and recognition</li>
+                                        <li>Dlib for facial landmark detection</li>
+                                        <li>SQLite/PostgreSQL for data storage</li>
+                                        <li>Celery for background tasks</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="tech-stack">
+                                    <h5><i class="fab fa-js-square text-warning me-2"></i>Frontend - Bootstrap + JavaScript</h5>
+                                    <ul class="mt-3">
+                                        <li>Responsive Bootstrap UI</li>
+                                        <li>Chart.js for analytics visualization</li>
+                                        <li>AJAX for real-time updates</li>
+                                        <li>Webcam integration for face capture</li>
+                                        <li>REST API consumption</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Tabs -->
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab">
+                    <i class="fas fa-camera me-2"></i>Live Attendance
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="analytics-tab" data-bs-toggle="tab" data-bs-target="#analytics" type="button" role="tab">
+                    <i class="fas fa-chart-pie me-2"></i>Class Analytics
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="reports-tab" data-bs-toggle="tab" data-bs-target="#reports" type="button" role="tab">
+                    <i class="fas fa-file-alt me-2"></i>Reports
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="students-tab" data-bs-toggle="tab" data-bs-target="#students" type="button" role="tab">
+                    <i class="fas fa-user-graduate me-2"></i>Student Management
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="myTabContent">
+            <!-- Live Attendance Tab -->
+            <div class="tab-pane fade show active" id="home" role="tabpanel">
+                <div class="row">
+                    <div class="col-lg-8 mb-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="section-title">Real-time Face Recognition</h4>
+                                <div class="camera-container mb-4">
+                                    <div class="text-center p-5">
+                                        <i class="fas fa-camera fa-4x mb-3 text-muted"></i>
+                                        <p class="text-muted">Camera feed will appear here when active</p>
+                                        <button class="btn btn-primary mt-3" id="startCamera">
+                                            <i class="fas fa-play me-2"></i>Start Recognition
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="backend-api">
+                                    <h6><i class="fas fa-server me-2"></i>Backend API Endpoints</h6>
+                                    <div class="mt-2">
+                                        <code>POST /api/attendance/mark-attendance/</code> - Mark attendance via face recognition<br>
+                                        <code>GET /api/attendance/today-stats/</code> - Get today's attendance statistics<br>
+                                        <code>POST /api/face-detect/verify-liveness/</code> - Fake face detection
+                                    </div>
+                                </div>
+                                
+                                <div class="row text-center">
+                                    <div class="col-md-4 mb-3">
+                                        <div class="analytics-card">
+                                            <div class="analytics-value text-success">142</div>
+                                            <div class="text-muted">Present Today</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="analytics-card">
+                                            <div class="analytics-value text-warning">18</div>
+                                            <div class="text-muted">Absent Today</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="analytics-card">
+                                            <div class="analytics-value text-danger">2</div>
+                                            <div class="text-muted">Fake Attempts</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4">
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h4 class="section-title">Recent Recognitions</h4>
+                                <div class="d-flex align-items-center mb-3 p-3 bg-success bg-opacity-10 rounded">
+                                    <div class="face-circle" style="width: 50px; height: 50px;">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div class="ms-3">
+                                        <h6 class="mb-0">Michael Chen</h6>
+                                        <small class="text-muted">Just now • CS-201</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex align-items-center mb-3 p-3 bg-success bg-opacity-10 rounded">
+                                    <div class="face-circle" style="width: 50px; height: 50px;">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div class="ms-3">
+                                        <h6 class="mb-0">Jessica Williams</h6>
+                                        <small class="text-muted">2 minutes ago • CS-201</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex align-items-center mb-3 p-3 bg-warning bg-opacity-10 rounded fake-face-alert">
+                                    <div class="face-circle" style="width: 50px; height: 50px;">
+                                        <i class="fas fa-ban text-warning"></i>
+                                    </div>
+                                    <div class="ms-3">
+                                        <h6 class="mb-0">Fake Face Detected</h6>
+                                        <small class="text-muted">5 minutes ago • Blocked</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex align-items-center p-3 bg-success bg-opacity-10 rounded">
+                                    <div class="face-circle" style="width: 50px; height: 50px;">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div class="ms-3">
+                                        <h6 class="mb-0">David Miller</h6>
+                                        <small class="text-muted">7 minutes ago • CS-201</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="section-title">System Status</h4>
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span>Face Recognition Model</span>
+                                        <span class="text-success">Active</span>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: 95%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span>Fake Face Detection</span>
+                                        <span class="text-success">Active</span>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: 92%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span>Database Connection</span>
+                                        <span class="text-success">Stable</span>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: 100%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <button class="btn btn-outline-primary w-100 mb-2">
+                                        <i class="fas fa-sync-alt me-2"></i>Refresh System
+                                    </button>
+                                    <button class="btn btn-outline-warning w-100">
+                                        <i class="fas fa-cog me-2"></i>System Settings
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Analytics Tab -->
+            <div class="tab-pane fade" id="analytics" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h4 class="section-title">Attendance Trends</h4>
+                                <div class="p-4 text-center">
+                                    <canvas id="attendanceChart" height="300"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="section-title">Class Performance</h4>
+                                <div class="table-responsive">
+                                    <table class="table attendance-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Class</th>
+                                                <th>Total Students</th>
+                                                <th>Avg. Attendance</th>
+                                                <th>Top Performer</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>CS-201 Algorithms</td>
+                                                <td>45</td>
+                                                <td>92%</td>
+                                                <td>Michael Chen (100%)</td>
+                                                <td><span class="badge bg-success">Excellent</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td>CS-301 Database Systems</td>
+                                                <td>38</td>
+                                                <td>87%</td>
+                                                <td>Sarah Johnson (98%)</td>
+                                                <td><span class="badge bg-success">Good</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td>CS-101 Intro to Programming</td>
+                                                <td>62</td>
+                                                <td>78%</td>
+                                                <td>David Wilson (95%)</td>
+                                                <td><span class="badge bg-warning">Needs Attention</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td>CS-401 AI & Machine Learning</td>
+                                                <td>28</td>
+                                                <td>95%</td>
+                                                <td>Emily Davis (100%)</td>
+                                                <td><span class="badge bg-success">Excellent</span></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h4 class="section-title">Attendance Distribution</h4>
+                                <div class="p-4 text-center">
+                                    <canvas id="attendancePieChart" height="300"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="section-title">Key Metrics</h4>
+                                <div class="analytics-card mb-3">
+                                    <div class="analytics-value text-primary">89%</div>
+                                    <div>Overall Attendance Rate</div>
+                                </div>
+                                <div class="analytics-card mb-3">
+                                    <div class="analytics-value text-success">12%</div>
+                                    <div>Improvement This Month</div>
+                                </div>
+                                <div class="analytics-card mb-3">
+                                    <div class="analytics-value text-warning">7</div>
+                                    <div>Consistently Absent Students</div>
+                                </div>
+                                <div class="analytics-card">
+                                    <div class="analytics-value text-danger">5</div>
+                                    <div>Fake Attempts This Week</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Reports Tab -->
+            <div class="tab-pane fade" id="reports" role="tabpanel">
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <h4 class="section-title">Automated Report Generation</h4>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Generate New Report
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4 mb-4">
+                        <div class="card report-card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div class="feature-icon">
+                                        <i class="fas fa-calendar-week"></i>
+                                    </div>
+                                    <span class="badge bg-success">Completed</span>
+                                </div>
+                                <h5>Weekly Attendance Report</h5>
+                                <p class="text-muted">CS-201 Algorithms • Oct 16-20, 2023</p>
+                                <div class="d-flex justify-content-between mt-4">
+                                    <small class="text-muted">Generated: Today, 10:24 AM</small>
+                                    <button class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-4">
+                        <div class="card report-card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div class="feature-icon">
+                                        <i class="fas fa-calendar-alt"></i>
+                                    </div>
+                                    <span class="badge bg-success">Completed</span>
+                                </div>
+                                <h5>Monthly Analytics Report</h5>
+                                <p class="text-muted">All Classes • October 2023</p>
+                                <div class="d-flex justify-content-between mt-4">
+                                    <small class="text-muted">Generated: Yesterday, 3:45 PM</small>
+                                    <button class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-4">
+                        <div class="card report-card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div class="feature-icon">
+                                        <i class="fas fa-user-graduate"></i>
+                                    </div>
+                                    <span class="badge bg-warning">In Progress</span>
+                                </div>
+                                <h5>Student Performance Report</h5>
+                                <p class="text-muted">At-Risk Students • Fall 2023</p>
+                                <div class="d-flex justify-content-between mt-4">
+                                    <small class="text-muted">Estimated: 5 minutes</small>
+                                    <button class="btn btn-sm btn-outline-warning">
+                                        <i class="fas fa-clock"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="section-title">Report History</h4>
+                        <div class="table-responsive">
+                            <table class="table attendance-table">
+                                <thead>
+                                    <tr>
+                                        <th>Report Name</th>
+                                        <th>Type</th>
+                                        <th>Date Range</th>
+                                        <th>Generated On</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>CS-201 Weekly Attendance</td>
+                                        <td>Weekly</td>
+                                        <td>Oct 9-13, 2023</td>
+                                        <td>Oct 13, 2023</td>
+                                        <td><span class="badge bg-success">Completed</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-download"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Department Monthly Summary</td>
+                                        <td>Monthly</td>
+                                        <td>September 2023</td>
+                                        <td>Oct 1, 2023</td>
+                                        <td><span class="badge bg-success">Completed</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-download"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Fake Attempt Analysis</td>
+                                        <td>Security</td>
+                                        <td>Jul 1 - Sep 30, 2023</td>
+                                        <td>Oct 5, 2023</td>
+                                        <td><span class="badge bg-success">Completed</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-download"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Student Management Tab -->
+            <div class="tab-pane fade" id="students" role="tabpanel">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h4 class="section-title">Student Management</h4>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <button class="btn btn-primary me-2">
+                            <i class="fas fa-plus me-2"></i>Add New Student
+                        </button>
+                        <button class="btn btn-outline-primary">
+                            <i class="fas fa-upload me-2"></i>Bulk Import
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <div class="analytics-card">
+                                    <div class="analytics-value">168</div>
+                                    <div>Total Students</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="analytics-card">
+                                    <div class="analytics-value text-success">142</div>
+                                    <div>Active Students</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="analytics-card">
+                                    <div class="analytics-value text-warning">18</div>
+                                    <div>Inactive Students</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="analytics-card">
+                                    <div class="analytics-value text-info">8</div>
+                                    <div>New This Month</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table attendance-table">
+                                <thead>
+                                    <tr>
+                                        <th>Student ID</th>
+                                        <th>Name</th>
+                                        <th>Class</th>
+                                        <th>Enrollment Date</th>
+                                        <th>Attendance Rate</th>
+                                        <th>Face Registered</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>S-1001</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="face-circle me-3" style="width: 40px; height: 40px;">
+                                                    <i class="fas fa-user"></i>
+                                                </div>
+                                                Michael Chen
+                                            </div>
+                                        </td>
+                                        <td>CS-201, CS-301</td>
+                                        <td>Aug 15, 2023</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="progress me-2" style="width: 80px; height: 8px;">
+                                                    <div class="progress-bar bg-success" role="progressbar" style="width: 98%"></div>
+                                                </div>
+                                                98%
+                                            </div>
+                                        </td>
+                                        <td><span class="badge bg-success">Yes</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary me-1">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-warning">
+                                                <i class="fas fa-camera"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>S-1002</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="face-circle me-3" style="width: 40px; height: 40px;">
+                                                    <i class="fas fa-user"></i>
+                                                </div>
+                                                Jessica Williams
+                                            </div>
+                                        </td>
+                                        <td>CS-201, CS-101</td>
+                                        <td>Aug 20, 2023</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="progress me-2" style="width: 80px; height: 8px;">
+                                                    <div class="progress-bar bg-success" role="progressbar" style="width: 95%"></div>
+                                                </div>
+                                                95%
+                                            </div>
+                                        </td>
+                                        <td><span class="badge bg-success">Yes</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary me-1">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-warning">
+                                                <i class="fas fa-camera"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>S-1003</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="face-circle me-3" style="width: 40px; height: 40px;">
+                                                    <i class="fas fa-user"></i>
+                                                </div>
+                                                David Miller
+                                            </div>
+                                        </td>
+                                        <td>CS-301</td>
+                                        <td>Sep 5, 2023</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="progress me-2" style="width: 80px; height: 8px;">
+                                                    <div class="progress-bar bg-warning" role="progressbar" style="width: 72%"></div>
+                                                </div>
+                                                72%
+                                            </div>
+                                        </td>
+                                        <td><span class="badge bg-success">Yes</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary me-1">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-warning">
+                                                <i class="fas fa-camera"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>S-1004</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="face-circle me-3" style="width: 40px; height: 40px;">
+                                                    <i class="fas fa-user-times text-warning"></i>
+                                                </div>
+                                                Robert Garcia
+                                            </div>
+                                        </td>
+                                        <td>CS-101</td>
+                                        <td>Aug 28, 2023</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="progress me-2" style="width: 80px; height: 8px;">
+                                                    <div class="progress-bar bg-danger" role="progressbar" style="width: 45%"></div>
+                                                </div>
+                                                45%
+                                            </div>
+                                        </td>
+                                        <td><span class="badge bg-warning">Pending</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary me-1">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-warning">
+                                                <i class="fas fa-camera"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Features Section -->
+        <div class="row my-5">
+            <div class="col-12 text-center mb-5">
+                <h
